@@ -1,24 +1,17 @@
 package data;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
+// Клас, що зберігає знімок метрик
 public class MetricSnapshot {
-    private int id;
-    private double cpuLoad;
-    private long memoryUsage;
-    private LocalDateTime timestamp;
+    private final double cpu;
+    private final long ram;
 
-    public MetricSnapshot(int id, double cpuLoad, long memoryUsage) {
-        this.id = id;
-        this.cpuLoad = cpuLoad;
-        this.memoryUsage = memoryUsage;
-        this.timestamp = LocalDateTime.now();
+    public MetricSnapshot(double cpu, long ram) {
+        this.cpu = cpu;
+        this.ram = ram;
     }
 
     @Override
     public String toString() {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss");
-        return String.format("[ID:%d | %s] CPU: %.1f%%, RAM: %d MB",
-                id, timestamp.format(fmt), cpuLoad, memoryUsage);
+        return String.format("[Snapshot] CPU: %.1f%%, RAM: %d MB", cpu, ram);
     }
 }

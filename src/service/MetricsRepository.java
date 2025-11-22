@@ -1,19 +1,20 @@
 package service;
+
 import data.MetricSnapshot;
-import pattern.SnapshotCollection;
+import java.util.ArrayList;
+import java.util.List;
 
+// Клас, що зберігає історію знімків
 public class MetricsRepository {
-    // Використання власної колекції (Агрегата)
-    private SnapshotCollection database = new SnapshotCollection();
-    private int currentId = 0;
+    private final List<MetricSnapshot> snapshots = new ArrayList<>();
 
-    public void save(double cpu, long ram) {
-        MetricSnapshot snapshot = new MetricSnapshot(++currentId, cpu, ram);
-        database.add(snapshot);
-        System.out.println("-> [Repo] Saved: " + snapshot);
+    public void save(MetricSnapshot snapshot) {
+        snapshots.add(snapshot);
+        // Тут могла б бути логіка збереження у файл/БД
     }
 
-    public SnapshotCollection getHistory() {
-        return database;
+    // Метод для ЛР4 (Iterator)
+    public List<MetricSnapshot> getSnapshots() {
+        return snapshots;
     }
 }

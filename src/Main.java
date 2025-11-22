@@ -1,21 +1,24 @@
 import monitor.SystemMonitor;
+import monitor.LegacyMetricsLib;
+import monitor.LegacyMetricsAdapter;
+import service.MetricsRepository;
 
 public class Main {
     public static void main(String[] args) {
-        SystemMonitor monitor = new SystemMonitor();
 
-        System.out.println("=== ЗАПУСК SYSTEM ACTIVITY MONITOR ===\n");
+        // 0. Ініціалізація існуючих компонентів
+        MetricsRepository repository = new MetricsRepository();
 
-        // 1. Імітуємо роботу програми (збираємо 3 знімки)
-        monitor.captureSnapshot();
-        try { Thread.sleep(100); } catch (Exception e) {} // Пауза
+        // 1. Створення Adaptee
+        LegacyMetricsLib legacyLib = new LegacyMetricsLib();
 
-        monitor.captureSnapshot();
-        try { Thread.sleep(100); } catch (Exception e) {}
+        // 2. Створення Adapter, обгортаючи Adaptee
+        LegacyMetricsAdapter metricsProvider = new LegacyMetricsAdapter(legacyLib);
 
-        monitor.captureSnapshot();
+        // 3. Створення Client (SystemMonitor), передача йому Adapter
+        SystemMonitor monitor = new SystemMonitor(metricsProvider, repository);
 
-        // 2. Викликаємо метод з патерном Ітератор (Вимога ЛР4)
-        monitor.generateReport();
+        // Запуск функціоналу Client
+        monitor.captureAndSaveSnapshot();
     }
 }

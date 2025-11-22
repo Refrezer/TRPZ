@@ -1,35 +1,36 @@
 package monitor;
-import pattern.IContainer;
-import pattern.IIterator;
-import data.MetricSnapshot;
+
 import service.MetricsRepository;
-import service.OsAdapter;
+import data.MetricSnapshot;
 
+// SystemMonitor тепер залежить лише від IMetricProvider (Target)
 public class SystemMonitor {
-    private OsAdapter adapter = new OsAdapter();
-    private MetricsRepository repository = new MetricsRepository();
 
-    public void captureSnapshot() {
-        double cpu = adapter.getCpuLoad();
-        long ram = adapter.getMemoryUsage();
-        repository.save(cpu, ram);
+    // ДОДАНО: Залежність від інтерфейсу Target
+    private final IMetricProvider provider;
+    private final MetricsRepository repository;
+
+    // ЗМІНЕНО: Конструктор приймає IMetricProvider
+    public SystemMonitor(IMetricProvider provider, MetricsRepository repository) {
+        this.provider = provider;
+        this.repository = repository;
+        System.out.println("=== System Monitor: Ініціалізовано ===");
     }
 
-    // Генерація звіту з використанням паттерну Iterator
-    public void generateReport() {
-        System.out.println("\n--- REPORT GENERATION (Iterator Pattern) ---");
+    // ЗМІНЕНО: Виклик методу через IMetricProvider
+    public void captureAndSaveSnapshot() {
+        System.out.println("\n--- Запуск збору метрик ---");
 
-        // 1. Отримуємо контейнер (інтерфейс IContainer)
-        IContainer container = repository.getHistory();
+        // Виклик через уніфікований інтерфейс (це може бути Adapter або будь-який інший провайдер)
+        SystemMetrics metrics = provider.getSystemLoad();
 
-        // 2. Створюємо ітератор (інтерфейс IIterator)
-        IIterator iterator = container.createIterator();
+        // Створення MetricSnapshot (потребує імпорту data.MetricSnapshot)
+        MetricSnapshot snapshot = new MetricSnapshot(metrics.getCpuLoad(), metrics.getMemoryUsageMB());
+        repository.save(snapshot);
 
-        // 3. Послідовний обхід
-        while (iterator.hasNext()) {
-            MetricSnapshot item = iterator.next();
-            System.out.println("LOG >> " + item.toString());
-        }
-        System.out.println("--- END OF REPORT ---\n");
+        System.out.println("Знімок системи збережено: " + snapshot.toString());
+        System.out.println("--- Збір завершено ---");
     }
+
+    // ... Інші методи (generateReport, що використовує ітератор)
 }
