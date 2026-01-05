@@ -1,40 +1,46 @@
 package monitor.facade;
 
+import monitor.observer.EmailAlert;
+import monitor.observer.EventHub;
 import monitor.sensors.CpuSensor;
 import monitor.sensors.MemorySensor;
 import monitor.utils.SystemLogger;
 
-// Цей клас - ФАСАД.
-// Він приховує складність ініціалізації та роботи з різними сенсорами.
+// ФАСАД: Приховує складність системи
 public class ComputerSystem {
-
-    private CpuSensor cpuSensor;
-    private MemorySensor memorySensor;
+    private CpuSensor cpu;
+    private MemorySensor memory;
     private SystemLogger logger;
+    private EventHub events;
 
     public ComputerSystem() {
-        this.cpuSensor = new CpuSensor();
-        this.memorySensor = new MemorySensor();
-        // Використовуємо наш Singleton з 5-ї лаби
-        this.logger = SystemLogger.getInstance();
+        this.cpu = new CpuSensor();
+        this.memory = new MemorySensor();
+        this.logger = SystemLogger.getInstance(); // Singleton
+        this.events = new EventHub(); // Observer
+
+        // Підписуємо Email-сповіщення
+        events.subscribe(new EmailAlert());
     }
 
-    // Єдиний метод для клієнта, який робить всю брудну роботу
-    public void startMonitoring() {
-        logger.addLog("[FACADE] Початок повної діагностики системи...");
+    public void checkSystem() {
+        logger.log("[ФАСАД] Запуск повної діагностики...");
 
-        System.out.println("\n--- Ініціалізація підсистем ---");
+        // 1. Опитування CPU
+        String cpuStatus = cpu.getCpuInfo();
+        logger.log(cpuStatus);
 
-        // 1. Перевірка CPU
-        cpuSensor.collectData();
-        String cpuStatus = cpuSensor.getStatus();
-        logger.addLog("[FACADE] CPU перевірено: " + cpuStatus);
+        // 2. Опитування RAM
+        String ramStatus = memory.getMemoryInfo();
+        logger.log(ramStatus);
 
-        // 2. Перевірка RAM
-        memorySensor.collectData();
-        String ramStatus = memorySensor.getStatus();
-        logger.addLog("[FACADE] RAM перевірено: " + ramStatus);
+        // 3. Перевірка температури (Observer test)
+        int temp = cpu.getCurrentTemperature();
+        if (temp > 80) {
+            logger.log("УВАГА! Критична температура!");
+            events.notifySubscribers("Перегрів процесора: " + temp + "C");
+        }
 
-        System.out.println("--- Діагностику завершено ---\n");
+        logger.log("[ФАСАД] Діагностику завершено.");
     }
 }

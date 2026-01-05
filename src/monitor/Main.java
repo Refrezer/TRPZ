@@ -1,33 +1,20 @@
 package monitor;
 
-import monitor.observer.ConsoleAlert;
-import monitor.observer.FileLoggerObserver;
-import monitor.observer.SensorHub;
+import monitor.facade.ComputerSystem;
 
 public class Main {
-    public static void main(String[] args) {
-        System.out.println("=== Лабораторна робота №7: Патерн Observer ===\n");
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println("=== REAL SYSTEM MONITOR (Labs 5-7) ===\n");
 
-        // 1. Створюємо видавця (Датчики)
-        SensorHub hub = new SensorHub();
+        ComputerSystem computer = new ComputerSystem();
 
-        // 2. Створюємо підписників
-        ConsoleAlert display = new ConsoleAlert();
-        FileLoggerObserver logger = new FileLoggerObserver();
+        // Робимо 5 замірів з інтервалом, щоб побачити реальні зміни
+        for (int i = 1; i <= 5; i++) {
+            System.out.println("\n--- Замір #" + i + " ---");
+            computer.checkSystem();
 
-        // 3. Підписуємо їх на новини
-        hub.attach(display);
-        hub.attach(logger);
-
-        // 4. Імітуємо роботу системи
-        System.out.println("--- Тест 1: Нормальна температура ---");
-        hub.setTemperature(45);
-
-        System.out.println("\n--- Тест 2: Перегрів ---");
-        hub.setTemperature(85);
-
-        System.out.println("\n--- Тест 3: Відписка логера ---");
-        hub.detach(logger); // Логер більше не слухає
-        hub.setTemperature(90);
+            // Пауза 1.5 секунди, щоб процесор встиг змінити навантаження
+            Thread.sleep(1500);
+        }
     }
 }
