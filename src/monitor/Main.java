@@ -1,20 +1,32 @@
 package monitor;
 
 import monitor.facade.ComputerSystem;
+import monitor.visitor.JsonReportVisitor;
+import monitor.visitor.TextReportVisitor;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("=== REAL SYSTEM MONITOR (Labs 5-7) ===\n");
+        System.out.println("=== SYSTEM MONITOR (Lab 8: Visitor) ===\n");
 
+        // 1. Створюємо систему (Тут ініціалізуються сенсори)
         ComputerSystem computer = new ComputerSystem();
 
-        // Робимо 5 замірів з інтервалом, щоб побачити реальні зміни
-        for (int i = 1; i <= 5; i++) {
-            System.out.println("\n--- Замір #" + i + " ---");
-            computer.checkSystem();
+        // ВАЖЛИВО: Даємо системі 1 секунду, щоб накопичити статистику CPU.
+        // Без цієї паузи Java не встигає порахувати різницю і видає 0%.
+        Thread.sleep(1000);
 
-            // Пауза 1.5 секунди, щоб процесор встиг змінити навантаження
-            Thread.sleep(1500);
-        }
+        System.out.println("--- ЕТАП 1: Стандартна діагностика ---");
+        computer.checkSystem();
+
+        System.out.println("\n--- ЕТАП 2: Демонстрація VISITOR ---");
+
+        // Ще одна пауза, щоб дані змінилися
+        Thread.sleep(1000);
+
+        System.out.println("\n[1] Формування текстового звіту:");
+        computer.generateReport(new TextReportVisitor());
+
+        System.out.println("\n[2] Експорт у JSON формат:");
+        computer.generateReport(new JsonReportVisitor());
     }
 }

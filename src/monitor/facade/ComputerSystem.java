@@ -5,6 +5,7 @@ import monitor.observer.EventHub;
 import monitor.sensors.CpuSensor;
 import monitor.sensors.MemorySensor;
 import monitor.utils.SystemLogger;
+import monitor.visitor.IVisitor; // <--- Додано імпорт
 
 // ФАСАД: Приховує складність системи
 public class ComputerSystem {
@@ -23,6 +24,7 @@ public class ComputerSystem {
         events.subscribe(new EmailAlert());
     }
 
+    // Метод для ЛР 6-7 (звичайний моніторинг)
     public void checkSystem() {
         logger.log("[ФАСАД] Запуск повної діагностики...");
 
@@ -35,12 +37,22 @@ public class ComputerSystem {
         logger.log(ramStatus);
 
         // 3. Перевірка температури (Observer test)
-        int temp = cpu.getCurrentTemperature();
+        int temp = cpu  .getCurrentTemperature();
         if (temp > 80) {
             logger.log("УВАГА! Критична температура!");
             events.notifySubscribers("Перегрів процесора: " + temp + "C");
         }
 
         logger.log("[ФАСАД] Діагностику завершено.");
+    }
+
+    // --- НОВЕ ДЛЯ ЛР 8 (Visitor) ---
+    // Цей метод дозволяє "відвідувачу" пройтися по компонентах системи
+    public void generateReport(IVisitor visitor) {
+        logger.log("[VISITOR] Генерація звіту...");
+
+        // Передаємо відвідувача нашим сенсорам
+        cpu.accept(visitor);
+        memory.accept(visitor);
     }
 }

@@ -1,34 +1,57 @@
 package monitor.sensors;
 
+import monitor.visitor.IVisitor;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Random;
 
-public class CpuSensor {
+public class CpuSensor implements ISensor {
 
-    public String getCpuInfo() {
-        OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-        int cores = osBean.getAvailableProcessors();
+    // ВАЖНО: Делаем bean полем класса, чтобы он хранил историю замеров
+    private OperatingSystemMXBean osBean;
 
-        // Отримуємо реальне завантаження процесора
-        double load = -1;
+    public CpuSensor() {
+        this.osBean = ManagementFactory.getOperatingSystemMXBean();
+
+        // "Прогрев" датчика: первый вызов всегда дает 0 или NaN,
+        // поэтому делаем его сразу при запуске программы вхолостую.
         if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
-            load = ((com.sun.management.OperatingSystemMXBean) osBean).getSystemCpuLoad();
+            ((com.sun.management.OperatingSystemMXBean) osBean).getSystemCpuLoad();
         }
+    }
 
-        // Якщо Java ще не встигла порахувати (перші мілісекунди), показуємо статус
-        String loadStr = (load < 0 || Double.isNaN(load)) ? "Обчислення..." : String.format("%.1f%%", load * 100);
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visit(this);
+    }
 
-        // Температуру без прав адміністратора Java не віддає.
-        // Генеруємо значення для перевірки патерну Observer.
-        int temp = new Random().nextInt(15) + 40;
+    // Получение реальной загрузки
+    public double getLoad() {
+        if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
+            double load = ((com.sun.management.OperatingSystemMXBean) osBean).getSystemCpuLoad();
+            // Если Java вернула NaN (не успела замерить), возвращаем 0.0, иначе проценты
+            return Double.isNaN(load) ? 0.0 : load * 100;
+        }
+        return 0.0;
+    }
 
-        return String.format("CPU: Ядер - %d, Завантаження - %s, Температура - %d°C",
-                cores, loadStr, temp);
+    // Остальные методы
+    public int getCores() {
+        return osBean.getAvailableProcessors();
     }
 
     public int getCurrentTemperature() {
-        // Генеруємо температуру (іноді високу), щоб спрацювала тривога
-        return new Random().nextInt(30) + 60;
+        // Температуру без админ-прав Java не видит, имитируем
+        return new Random().nextInt(20) + 50;
+    }
+
+    public int getTemperature() {
+        return getCurrentTemperature();
+    }
+
+    // Метод для вывода (используется в Facade)
+    public String getCpuInfo() {
+        return String.format("CPU: Ядер - %d, Загрузка - %.1f%%, Температура - %d°C",
+                getCores(), getLoad(), getTemperature());
     }
 }
