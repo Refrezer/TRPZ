@@ -1,13 +1,13 @@
 package monitor.facade;
 
+import monitor.memento.SystemSnapshot; // <--- Імпорт
 import monitor.observer.EmailAlert;
 import monitor.observer.EventHub;
 import monitor.sensors.CpuSensor;
 import monitor.sensors.MemorySensor;
 import monitor.utils.SystemLogger;
-import monitor.visitor.IVisitor; // <--- Додано імпорт
+import monitor.visitor.IVisitor;
 
-// ФАСАД: Приховує складність системи
 public class ComputerSystem {
     private CpuSensor cpu;
     private MemorySensor memory;
@@ -17,42 +17,42 @@ public class ComputerSystem {
     public ComputerSystem() {
         this.cpu = new CpuSensor();
         this.memory = new MemorySensor();
-        this.logger = SystemLogger.getInstance(); // Singleton
-        this.events = new EventHub(); // Observer
-
-        // Підписуємо Email-сповіщення
+        this.logger = SystemLogger.getInstance();
+        this.events = new EventHub();
         events.subscribe(new EmailAlert());
     }
 
-    // Метод для ЛР 6-7 (звичайний моніторинг)
     public void checkSystem() {
-        logger.log("[ФАСАД] Запуск повної діагностики...");
-
-        // 1. Опитування CPU
-        String cpuStatus = cpu.getCpuInfo();
-        logger.log(cpuStatus);
-
-        // 2. Опитування RAM
-        String ramStatus = memory.getMemoryInfo();
-        logger.log(ramStatus);
-
-        // 3. Перевірка температури (Observer test)
-        int temp = cpu  .getCurrentTemperature();
-        if (temp > 80) {
-            logger.log("УВАГА! Критична температура!");
-            events.notifySubscribers("Перегрів процесора: " + temp + "C");
-        }
-
-        logger.log("[ФАСАД] Діагностику завершено.");
+        logger.log("[ФАСАД] Поточний стан:");
+        logger.log(cpu.getCpuInfo());
+        logger.log(memory.getMemoryInfo());
     }
 
-    // --- НОВЕ ДЛЯ ЛР 8 (Visitor) ---
-    // Цей метод дозволяє "відвідувачу" пройтися по компонентах системи
+    // --- ЛР 8 (Visitor) ---
     public void generateReport(IVisitor visitor) {
         logger.log("[VISITOR] Генерація звіту...");
-
-        // Передаємо відвідувача нашим сенсорам
         cpu.accept(visitor);
         memory.accept(visitor);
+    }
+
+    // --- ЛР 9 (MEMENTO) ---
+
+    // 1. Створити точку відновлення (Save)
+    public SystemSnapshot save() {
+        logger.log("[MEMENTO] Збереження точки відновлення...");
+        // Ми беремо поточні дані з сенсорів і пакуємо їх у знімок
+        return new SystemSnapshot(
+                cpu.getCpuInfo(),
+                memory.getMemoryInfo()
+        );
+    }
+
+    // 2. Відновити стан (Restore)
+    public void restore(SystemSnapshot snapshot) {
+        logger.log("[MEMENTO] Завантаження точки відновлення...");
+        System.out.println("   >>> ВІДНОВЛЕНО ДАНІ: " + snapshot.getSnapshotInfo());
+
+        // Тут ми могли б "відкотити" налаштування, якби вони у нас були.
+        // Але оскільки це моніторинг, ми просто показуємо збережені дані.
     }
 }

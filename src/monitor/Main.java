@@ -1,32 +1,30 @@
 package monitor;
 
 import monitor.facade.ComputerSystem;
-import monitor.visitor.JsonReportVisitor;
-import monitor.visitor.TextReportVisitor;
+import monitor.memento.SystemSnapshot;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("=== SYSTEM MONITOR (Lab 8: Visitor) ===\n");
+        System.out.println("=== SYSTEM MONITOR (Lab 9: Memento) ===\n");
 
-        // 1. Створюємо систему (Тут ініціалізуються сенсори)
         ComputerSystem computer = new ComputerSystem();
 
-        // ВАЖЛИВО: Даємо системі 1 секунду, щоб накопичити статистику CPU.
-        // Без цієї паузи Java не встигає порахувати різницю і видає 0%.
-        Thread.sleep(1000);
+        // 1. Початковий стан
+        System.out.println("--- КРОК 1: Поточний стан ---");
+        computer.checkSystem();
+        Thread.sleep(1500); // Час на зміну параметрів
 
-        System.out.println("--- ЕТАП 1: Стандартна діагностика ---");
+        // 2. ЗБЕРЕЖЕННЯ (Створюємо точку відновлення)
+        System.out.println("\n--- КРОК 2: Створення бекапу (Save) ---");
+        SystemSnapshot backup = computer.save();
+
+        // 3. Зміна стану (імітуємо навантаження)
+        System.out.println("\n--- КРОК 3: Робота системи (зміна даних) ---");
+        Thread.sleep(2000); // Дані CPU зміняться
         computer.checkSystem();
 
-        System.out.println("\n--- ЕТАП 2: Демонстрація VISITOR ---");
-
-        // Ще одна пауза, щоб дані змінилися
-        Thread.sleep(1000);
-
-        System.out.println("\n[1] Формування текстового звіту:");
-        computer.generateReport(new TextReportVisitor());
-
-        System.out.println("\n[2] Експорт у JSON формат:");
-        computer.generateReport(new JsonReportVisitor());
+        // 4. ВІДНОВЛЕННЯ (Повертаємося до старого запису)
+        System.out.println("\n--- КРОК 4: Відкат системи (Restore) ---");
+        computer.restore(backup);
     }
 }
